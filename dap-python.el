@@ -50,38 +50,37 @@ For example you may set it to `xterm -e' which will pop xterm console when you a
 
 (defun dap-python--pyenv-executable-find (command)
   "Find executable taking pyenv shims into account.
-If the executable is a system executable and not in the same path
-as the pyenv version then also return nil. This works around https://github.com/pyenv/pyenv-which-ext
-"
+If the executable is a system executable and not in the same path as the pyenv
+ version then also return nil.
+This works around https://github.com/pyenv/pyenv-which-ext."
   (if (executable-find "pyenv")
       (progn
         (let ((pyenv-string (shell-command-to-string (concat "pyenv which " command)))
               (pyenv-version-names (split-string (string-trim (shell-command-to-string "pyenv version-name")) ":"))
               (executable nil)
               (i 0))
-          (if (not (string-match "not found" pyenv-string))
-              (while (and (not executable)
-                          (< i (length pyenv-version-names)))
-                (if (string-match (elt pyenv-version-names i) (string-trim pyenv-string))
-                    (setq executable (string-trim pyenv-string)))
-                (if (string-match (elt pyenv-version-names i) "system")
-                    (setq executable (string-trim (executable-find command))))
-                (setq i (1+ i))))
+          (unless (string-match "not found" pyenv-string)
+            (while (and (not executable) (< i (length pyenv-version-names)))
+              (when (string-match (elt pyenv-version-names i) (string-trim pyenv-string))
+                (setq executable (string-trim pyenv-string)))
+              (when (string-match (elt pyenv-version-names i) "system")
+                (setq executable (string-trim (executable-find command))))
+              (setq i (1+ i))))
           executable))
     (executable-find command)))
 
 (cl-defstruct dap-python--point
-  (line (:type integer) :named t)
-  (character (:type integer) :named t))
+  (line '(:type integer) :named t)
+  (character '(:type integer) :named t))
 
 (cl-defstruct dap-python--location
-  (start (:type dap-python--point) :named t)
-  (end (:type dap-python--point) :named t))
+  (start '(:type dap-python--point) :named t)
+  (end '(:type dap-python--point) :named t))
 
 (cl-defstruct dap-python--symbol
-  (name (:type string) :named t)
-  (type (:type string) :named t)
-  (location (:type dap-python--location) :named t))
+  (name '(:type string) :named t)
+  (type '(:type string) :named t)
+  (location '(:type dap-python--location) :named t))
 
 (cl-defgeneric dap-python--equal (lhs rhs)
   (:documentation "Check if lhs and rhs are equal"))
@@ -260,7 +259,6 @@ overriden in individual `dap-python' launch configurations."
                                    :program nil
                                    :request "launch"
                                    :name "Python :: Run file (buffer)"))
-
 (dap-register-debug-template "Python :: Run pytest (buffer)"
                              (list :type "python"
                                    :args ""
